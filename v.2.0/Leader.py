@@ -35,7 +35,7 @@ def run_script(script_name, log_message, *args):
     log_message(f"Запуск скрипта: {script_name}", "INFO")
     try:
         subprocess.run(["python", script_name, *args], check=True)
-        log_message(f"Скрипт {script_name} успешно выполнен.", "INFO")
+        log_message(f"Скрипт {script_name} успешно выполнен.", "OK")  # Уровень OK для успешного выполнения
         return True
     except subprocess.CalledProcessError as e:
         log_message(f"Ошибка при выполнении скрипта {script_name}: {e}", "ERROR")
@@ -86,7 +86,7 @@ def convert_or_move_files(schedule_file, reference_file, log_message):
         log_message("Один или оба файла отсутствуют после преобразования или перекладывания.", "ERROR")
         return None
 
-    log_message("Файлы успешно преобразованы или переложены.", "INFO")
+    log_message("Файлы успешно преобразованы или переложены.", "OK")  # Уровень OK для успешного завершения
     return csv_schedule_file, csv_reference_file
 
 def main(schedule_file, reference_file, log_message):
@@ -97,6 +97,7 @@ def main(schedule_file, reference_file, log_message):
     :param log_message: Функция логирования из journal_SO.pyw.
     """
     log_message("Начало работы основного скрипта.", "INFO")
+    log_message("Запуск скрипта Leader.py...", "OK")  # Логирование запуска скрипта
 
     # 1. Преобразование Excel в CSV или перекладывание CSV-файлов
     log_message("Шаг 1: Преобразование или перекладывание файлов...", "INFO")
@@ -124,7 +125,7 @@ def main(schedule_file, reference_file, log_message):
         log_message("JSON-файл не создан. Завершение работы.", "ERROR")
         return
 
-    log_message("JSON-файл успешно создан. Работа скрипта завершена.", "INFO")
+    log_message("JSON-файл успешно создан. Работа скрипта завершена.", "OK")  # Уровень OK для успешного завершения
 
 # Точка входа в программу
 if __name__ == "__main__":

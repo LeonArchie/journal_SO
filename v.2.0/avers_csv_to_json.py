@@ -95,7 +95,7 @@ def parse_schedule(file_path, log_message):
             log_message("Пустая строка. Пропуск.", "DEBUG")
             i += 1
 
-    log_message(f"Парсинг завершен. Обработано {i} строк.", "INFO")
+    log_message(f"Парсинг завершен. Обработано {i} строк.", "OK")  # Уровень OK для успешного завершения парсинга
     log_message(f"Результат парсинга: {json.dumps(schedule, ensure_ascii=False, indent=2)}", "DEBUG")
     return schedule
 
@@ -108,6 +108,7 @@ def main(file_path, log_message):
     """
     try:
         log_message(f"Начало работы скрипта avers_csv_to_json.py. Путь к файлу: {file_path}", "INFO")
+        log_message("Запуск скрипта avers_csv_to_json.py...", "OK")  # Логирование запуска скрипта
 
         # Получаем текущую директорию, где находится скрипт
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -122,7 +123,7 @@ def main(file_path, log_message):
         log_message(f"Сохранение результата в файл: {output_file_path}", "INFO")
         with open(output_file_path, 'w', encoding='utf-8') as json_file:
             json.dump(parsed_schedule, json_file, ensure_ascii=False, indent=4)
-        log_message(f"Результат успешно сохранен в файл: {output_file_path}", "INFO")
+        log_message(f"Результат успешно сохранен в файл: {output_file_path}", "OK")  # Уровень OK для успешного сохранения
 
         return True
 

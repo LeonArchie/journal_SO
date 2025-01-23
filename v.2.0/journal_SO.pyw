@@ -34,7 +34,7 @@ def update_log():
     log_area.delete("1.0", tk.END)  # Очищаем лог
 
     # Уровни логирования и их приоритеты
-    levels = {"DEBUG": 0, "INFO": 1, "WARNING": 2, "ERROR": 3}
+    levels = {"DEBUG": 0, "INFO": 1, "WARNING": 2, "ERROR": 3, "OK": 4}
     selected_priority = levels.get(selected_level, 3)  # По умолчанию ERROR
 
     # Фильтруем сообщения и добавляем только те, которые соответствуют выбранному уровню или выше
@@ -63,6 +63,8 @@ def get_color_for_level(level):
         return "black"
     elif level == "WARNING":
         return "orange"
+    elif level == "OK":  # Новый уровень OK
+        return "green"
     else:
         return "black"
 
@@ -113,6 +115,7 @@ def check_fields():
 def start_process():
     """Обработка нажатия кнопки 'Старт'."""
     log_message("Начало процесса обработки данных.", "INFO")
+    log_message("Запуск процесса обработки данных...", "OK")  # Логирование запуска процесса
     try:
         # Получаем пути к файлам расписания и справочника
         schedule_file = schedule_entry.get()
@@ -141,14 +144,14 @@ def start_process():
 
         # Логируем вывод скрипта Leader.py
         if result.returncode == 0:
-            log_message("Скрипт Leader.py успешно выполнен.", "INFO")
+            log_message("Скрипт Leader.py успешно выполнен.", "OK")  # Уровень OK для успешного выполнения
             log_message(f"Вывод скрипта: {result.stdout}", "DEBUG")
         else:
             log_message(f"Ошибка при выполнении скрипта Leader.py: {result.stderr}", "ERROR")
             raise RuntimeError(f"Ошибка при выполнении скрипта Leader.py: {result.stderr}")
 
         # Логируем завершение процесса
-        log_message("Обработка данных завершена.", "INFO")
+        log_message("Обработка данных завершена.", "OK")  # Уровень OK для успешного завершения
 
     except Exception as e:
         log_message(f"Ошибка при обработке данных: {e}", "ERROR")
@@ -171,7 +174,7 @@ style.configure("TEntry", padding=1, relief="flat")
 style.configure("TCombobox", padding=1, relief="flat")
 
 # Уровень логирования по умолчанию
-log_levels = ["DEBUG", "INFO", "WARNING", "ERROR"]
+log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "OK"]
 
 # Поле для выбора программы
 avers_label = ttk.Label(root, text="Выберите программу:")

@@ -13,7 +13,7 @@ def excel_to_csv(excel_file, csv_file, log_message):
         log_message(f"Начало преобразования файла {excel_file} в CSV...", "INFO")
         df = pd.read_excel(excel_file)
         df.to_csv(csv_file, index=False, encoding='utf-8')
-        log_message(f"Файл успешно преобразован: {csv_file}", "INFO")
+        log_message(f"Файл успешно преобразован: {csv_file}", "OK")  # Уровень OK для успешного преобразования
     except Exception as e:
         log_message(f"Ошибка при преобразовании файла: {e}", "ERROR")
         raise
@@ -62,7 +62,7 @@ def check_and_convert_files(schedule_file, reference_file, log_message):
             # Преобразование Excel в CSV
             log_message(f"Вызов функции excel_to_csv для файла расписания: {schedule_file}", "DEBUG")
             excel_to_csv(schedule_file, csv_schedule_file, log_message)
-            log_message(f"Excel-файл расписания успешно преобразован в CSV: {csv_schedule_file}", "INFO")
+            log_message(f"Excel-файл расписания успешно преобразован в CSV: {csv_schedule_file}", "OK")  # Уровень OK для успешного преобразования
 
             # Обновление пути к файлу расписания
             schedule_file = csv_schedule_file
@@ -96,7 +96,7 @@ def check_and_convert_files(schedule_file, reference_file, log_message):
             # Преобразование Excel в CSV
             log_message(f"Вызов функции excel_to_csv для файла справочника: {reference_file}", "DEBUG")
             excel_to_csv(reference_file, csv_reference_file, log_message)
-            log_message(f"Excel-файл справочника успешно преобразован в CSV: {csv_reference_file}", "INFO")
+            log_message(f"Excel-файл справочника успешно преобразован в CSV: {csv_reference_file}", "OK")  # Уровень OK для успешного преобразования
 
             # Обновление пути к файлу справочника
             reference_file = csv_reference_file
@@ -105,7 +105,7 @@ def check_and_convert_files(schedule_file, reference_file, log_message):
             log_message(f"Файл справочника {reference_file} уже в формате CSV. Преобразование не требуется.", "INFO")
 
         # Логирование успешного завершения
-        log_message("Проверка и преобразование файлов завершены успешно.", "INFO")
+        log_message("Проверка и преобразование файлов завершены успешно.", "OK")  # Уровень OK для успешного завершения
         log_message(f"Итоговые пути: schedule_file = {schedule_file}, reference_file = {reference_file}", "DEBUG")
 
         return schedule_file, reference_file

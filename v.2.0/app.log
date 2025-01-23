@@ -1,2 +1,0 @@
-[2025-01-23 18:55:19] [INFO] Запуск скрипта: excel_to_csv.py
-[2025-01-23 18:55:19] [ERROR] Ошибка при выполнении скрипта excel_to_csv.py: Command '['python3', 'excel_to_csv.py', 'path/to/Schedule.xlsx', 'C:\\WORCING\\GIT\\journal_SO\\v.2.0\\Schedule.csv']' returned non-zero exit status 9009.
