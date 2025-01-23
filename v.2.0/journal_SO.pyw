@@ -137,7 +137,7 @@ def start_process():
         # Вызываем скрипт Leader.py и передаем ему пути к файлам
         log_message("Вызов скрипта Leader.py...", "INFO")
         result = subprocess.run(
-            ["python", "Leader.py", schedule_file, reference_file],
+            ["python", "Leader.py", schedule_file, reference_file],  # Передаем пути к файлам
             capture_output=True,
             text=True
         )

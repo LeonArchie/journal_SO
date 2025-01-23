@@ -1,5 +1,22 @@
 import os
 import pandas as pd
+import sys
+from datetime import datetime
+
+def log_message(message, level):
+    """
+    Логирует сообщение с указанным уровнем и временем.
+    :param message: Сообщение для логирования.
+    :param level: Уровень логирования (INFO, ERROR, DEBUG, OK и т.д.).
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{level}] {message}"
+    # Вывод в stdout для INFO, DEBUG, OK и в stderr для ERROR
+    if level == "ERROR":
+        print(log_entry, file=sys.stderr)
+    else:
+        print(log_entry, file=sys.stdout)
+    return timestamp, level, message
 
 def excel_to_csv(excel_file, csv_file, log_message):
     """
@@ -7,7 +24,7 @@ def excel_to_csv(excel_file, csv_file, log_message):
 
     :param excel_file: Путь к Excel-файлу.
     :param csv_file: Путь для сохранения CSV-файла.
-    :param log_message: Функция логирования.
+    :param log_message: Функция логирования, переданная из journal_SO.pyw.
     """
     try:
         log_message(f"Начало преобразования файла {excel_file} в CSV...", "INFO")
@@ -16,7 +33,7 @@ def excel_to_csv(excel_file, csv_file, log_message):
         log_message(f"Файл успешно преобразован: {csv_file}", "OK")  # Уровень OK для успешного преобразования
     except Exception as e:
         log_message(f"Ошибка при преобразовании файла: {e}", "ERROR")
-        raise
+        raise  # Пробрасываем исключение для обработки в вызывающем коде
 
 def check_and_convert_files(schedule_file, reference_file, log_message):
     """
@@ -61,7 +78,7 @@ def check_and_convert_files(schedule_file, reference_file, log_message):
 
             # Преобразование Excel в CSV
             log_message(f"Вызов функции excel_to_csv для файла расписания: {schedule_file}", "DEBUG")
-            excel_to_csv(schedule_file, csv_schedule_file, log_message)
+            excel_to_csv(schedule_file, csv_schedule_file, log_message)  # Передаем log_message
             log_message(f"Excel-файл расписания успешно преобразован в CSV: {csv_schedule_file}", "OK")  # Уровень OK для успешного преобразования
 
             # Обновление пути к файлу расписания
@@ -95,7 +112,7 @@ def check_and_convert_files(schedule_file, reference_file, log_message):
 
             # Преобразование Excel в CSV
             log_message(f"Вызов функции excel_to_csv для файла справочника: {reference_file}", "DEBUG")
-            excel_to_csv(reference_file, csv_reference_file, log_message)
+            excel_to_csv(reference_file, csv_reference_file, log_message)  # Передаем log_message
             log_message(f"Excel-файл справочника успешно преобразован в CSV: {csv_reference_file}", "OK")  # Уровень OK для успешного преобразования
 
             # Обновление пути к файлу справочника

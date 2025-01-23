@@ -2,6 +2,19 @@ import os
 import time
 import subprocess
 import shutil
+from datetime import datetime
+import sys  # Добавлено для обработки аргументов командной строки
+
+def log_message(message, level):
+    """
+    Логирует сообщение с указанным уровнем и временем.
+    :param message: Сообщение для логирования.
+    :param level: Уровень логирования (INFO, ERROR, DEBUG, OK и т.д.).
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Получаем текущее время
+    log_entry = f"[{timestamp}] [{level}] {message}"  # Добавляем время в лог
+    print(log_entry)  # Временный вывод в консоль для отладки
+    return timestamp, level, message  # Возвращаем таймштамп, уровень и сообщение
 
 def check_file(file_path, log_message, encoding='utf-8'):
     """
@@ -11,7 +24,7 @@ def check_file(file_path, log_message, encoding='utf-8'):
     :param encoding: Кодировка файла (по умолчанию 'utf-8').
     :return: True, если файл существует и его кодировка корректна, иначе False.
     """
-    log_message(f"Проверка файла: {file_path}", "DEBUG")
+    timestamp, level, message = log_message(f"Проверка файла: {file_path}", "DEBUG")
     if not os.path.exists(file_path):
         log_message(f"Файл {file_path} не найден.", "ERROR")
         return False
@@ -26,18 +39,47 @@ def check_file(file_path, log_message, encoding='utf-8'):
 
 def run_script(script_name, log_message, *args):
     """
-    Запускает внешний скрипт с помощью subprocess.
+    Запускает внешний скрипт с помощью subprocess.Popen и передает вывод в реальном времени.
     :param script_name: Имя скрипта для запуска.
     :param log_message: Функция логирования из journal_SO.pyw.
     :param args: Аргументы для скрипта.
     :return: True, если скрипт выполнен успешно, иначе False.
     """
-    log_message(f"Запуск скрипта: {script_name}", "INFO")
+    timestamp, level, message = log_message(f"Запуск скрипта: {script_name}", "INFO")
     try:
-        subprocess.run(["python", script_name, *args], check=True)
-        log_message(f"Скрипт {script_name} успешно выполнен.", "OK")  # Уровень OK для успешного выполнения
-        return True
-    except subprocess.CalledProcessError as e:
+        # Запускаем процесс с Popen
+        process = subprocess.Popen(
+            ["python", script_name, *args],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,  # Построчная буферизация
+            universal_newlines=True
+        )
+
+        # Читаем вывод в реальном времени
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                log_message(f"[{script_name}] {output.strip()}", "DEBUG")
+
+            error = process.stderr.readline()
+            if error:
+                log_message(f"[{script_name}] {error.strip()}", "ERROR")
+
+        # Ожидаем завершения процесса
+        process.wait()
+
+        if process.returncode == 0:
+            log_message(f"Скрипт {script_name} успешно выполнен.", "OK")
+            return True
+        else:
+            log_message(f"Скрипт {script_name} завершился с ошибкой. Код возврата: {process.returncode}", "ERROR")
+            return False
+
+    except Exception as e:
         log_message(f"Ошибка при выполнении скрипта {script_name}: {e}", "ERROR")
         return False
 
@@ -62,8 +104,13 @@ def convert_or_move_files(schedule_file, reference_file, log_message):
             log_message("Ошибка при преобразовании файла расписания в CSV.", "ERROR")
             return None
     elif schedule_file.endswith('.csv'):
-        log_message(f"Файл расписания {schedule_file} уже в формате CSV. Перекладываем в папку с программой.", "INFO")
-        shutil.copy(schedule_file, csv_schedule_file)
+        log_message(f"Файл расписания {schedule_file} уже в формате CSV. Начинаем перекладывание в папку с программой.", "INFO")
+        try:
+            shutil.copy(schedule_file, csv_schedule_file)
+            log_message(f"Файл расписания успешно переложен в: {csv_schedule_file}", "OK")
+        except Exception as e:
+            log_message(f"Ошибка при перекладывании файла расписания: {e}", "ERROR")
+            return None
     else:
         log_message(f"Файл расписания {schedule_file} имеет неверный формат. Ожидается .xlsx или .csv.", "ERROR")
         return None
@@ -75,15 +122,24 @@ def convert_or_move_files(schedule_file, reference_file, log_message):
             log_message("Ошибка при преобразовании файла справочника в CSV.", "ERROR")
             return None
     elif reference_file.endswith('.csv'):
-        log_message(f"Файл справочника {reference_file} уже в формате CSV. Перекладываем в папку с программой.", "INFO")
-        shutil.copy(reference_file, csv_reference_file)
+        log_message(f"Файл справочника {reference_file} уже в формате CSV. Начинаем перекладывание в папку с программой.", "INFO")
+        try:
+            shutil.copy(reference_file, csv_reference_file)
+            log_message(f"Файл справочника успешно переложен в: {csv_reference_file}", "OK")
+        except Exception as e:
+            log_message(f"Ошибка при перекладывании файла справочника: {e}", "ERROR")
+            return None
     else:
         log_message(f"Файл справочника {reference_file} имеет неверный формат. Ожидается .xlsx или .csv.", "ERROR")
         return None
 
     # Проверка наличия файлов после преобразования или перекладывания
-    if not os.path.exists(csv_schedule_file) or not os.path.exists(csv_reference_file):
-        log_message("Один или оба файла отсутствуют после преобразования или перекладывания.", "ERROR")
+    log_message("Проверка наличия файлов после преобразования или перекладывания...", "DEBUG")
+    if not os.path.exists(csv_schedule_file):
+        log_message(f"Файл расписания {csv_schedule_file} отсутствует после преобразования или перекладывания.", "ERROR")
+        return None
+    if not os.path.exists(csv_reference_file):
+        log_message(f"Файл справочника {csv_reference_file} отсутствует после преобразования или перекладывания.", "ERROR")
         return None
 
     log_message("Файлы успешно преобразованы или переложены.", "OK")  # Уровень OK для успешного завершения
@@ -131,11 +187,18 @@ def main(schedule_file, reference_file, log_message):
 if __name__ == "__main__":
     # Пример вызова скрипта напрямую (для тестирования)
     def log_message(message, level="INFO"):
-        print(f"[{level}] {message}")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{timestamp}] [{level}] {message}")
+        return timestamp, level, message
+
+    # Получаем аргументы командной строки
+    if len(sys.argv) != 3:
+        print("Использование: python Leader.py <schedule_file> <reference_file>")
+        sys.exit(1)
 
     # Пути к файлам (должны быть переданы из journal_SO.py)
-    schedule_file = "path/to/Schedule.xlsx"  # Укажите путь к файлу расписания
-    reference_file = "path/to/Guide.xlsx"    # Укажите путь к файлу справочника
+    schedule_file = sys.argv[1]  # Путь к файлу расписания
+    reference_file = sys.argv[2]  # Путь к файлу справочника
 
     # Вызов основной функции
     main(schedule_file, reference_file, log_message)
