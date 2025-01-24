@@ -1,9 +1,11 @@
 import os
-import time
 import subprocess
 import shutil
 from datetime import datetime
-import sys  # Добавлено для обработки аргументов командной строки
+import sys
+
+# Настройка логирования в файл
+log_file = open("leader.log", "w", encoding="utf-8")
 
 def log_message(message, level):
     """
@@ -11,41 +13,22 @@ def log_message(message, level):
     :param message: Сообщение для логирования.
     :param level: Уровень логирования (INFO, ERROR, DEBUG, OK и т.д.).
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Получаем текущее время
-    log_entry = f"[{timestamp}] [{level}] {message}"  # Добавляем время в лог
-    print(log_entry)  # Временный вывод в консоль для отладки
-    return timestamp, level, message  # Возвращаем таймштамп, уровень и сообщение
-
-def check_file(file_path, log_message, encoding='utf-8'):
-    """
-    Проверяет наличие файла и его кодировку.
-    :param file_path: Путь к файлу.
-    :param log_message: Функция логирования из journal_SO.pyw.
-    :param encoding: Кодировка файла (по умолчанию 'utf-8').
-    :return: True, если файл существует и его кодировка корректна, иначе False.
-    """
-    timestamp, level, message = log_message(f"Проверка файла: {file_path}", "DEBUG")
-    if not os.path.exists(file_path):
-        log_message(f"Файл {file_path} не найден.", "ERROR")
-        return False
-    try:
-        with open(file_path, 'r', encoding=encoding) as file:
-            file.read()
-        log_message(f"Файл {file_path} успешно проверен.", "DEBUG")
-        return True
-    except UnicodeDecodeError:
-        log_message(f"Файл {file_path} имеет неверную кодировку.", "ERROR")
-        return False
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{level}] {message}"
+    
+    # Записываем сообщение в файл
+    log_file.write(log_entry + "\n")
+    log_file.flush()  # Обеспечиваем запись в файл сразу
 
 def run_script(script_name, log_message, *args):
     """
     Запускает внешний скрипт с помощью subprocess.Popen и передает вывод в реальном времени.
     :param script_name: Имя скрипта для запуска.
-    :param log_message: Функция логирования из journal_SO.pyw.
+    :param log_message: Функция логирования.
     :param args: Аргументы для скрипта.
     :return: True, если скрипт выполнен успешно, иначе False.
     """
-    timestamp, level, message = log_message(f"Запуск скрипта: {script_name}", "INFO")
+    log_message(f"Запуск скрипта: {script_name}", "INFO")
     try:
         # Запускаем процесс с Popen
         process = subprocess.Popen(
@@ -88,7 +71,7 @@ def convert_or_move_files(schedule_file, reference_file, log_message):
     Преобразует Excel-файлы в CSV или перекладывает CSV-файлы в папку с программой.
     :param schedule_file: Путь к файлу расписания.
     :param reference_file: Путь к файлу справочника.
-    :param log_message: Функция логирования из journal_SO.pyw.
+    :param log_message: Функция логирования.
     :return: Возвращает пути к CSV-файлам или None, если произошла ошибка.
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -150,7 +133,7 @@ def main(schedule_file, reference_file, log_message):
     Основная функция, которая управляет выполнением всех шагов.
     :param schedule_file: Путь к файлу расписания.
     :param reference_file: Путь к файлу справочника.
-    :param log_message: Функция логирования из journal_SO.pyw.
+    :param log_message: Функция логирования.
     """
     log_message("Начало работы основного скрипта.", "INFO")
     log_message("Запуск скрипта Leader.py...", "OK")  # Логирование запуска скрипта
@@ -185,12 +168,6 @@ def main(schedule_file, reference_file, log_message):
 
 # Точка входа в программу
 if __name__ == "__main__":
-    # Пример вызова скрипта напрямую (для тестирования)
-    def log_message(message, level="INFO"):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] [{level}] {message}")
-        return timestamp, level, message
-
     # Получаем аргументы командной строки
     if len(sys.argv) != 3:
         print("Использование: python Leader.py <schedule_file> <reference_file>")

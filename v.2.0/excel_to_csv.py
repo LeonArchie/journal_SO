@@ -3,7 +3,10 @@ import pandas as pd
 import sys
 from datetime import datetime
 
-def log_message(message, level):
+# Настройка логирования в файл
+log_file = open("excel_to_csv.log", "w", encoding="utf-8")
+
+def log_message(message, level="INFO"):
     """
     Логирует сообщение с указанным уровнем и временем.
     :param message: Сообщение для логирования.
@@ -11,12 +14,10 @@ def log_message(message, level):
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] [{level}] {message}"
-    # Вывод в stdout для INFO, DEBUG, OK и в stderr для ERROR
-    if level == "ERROR":
-        print(log_entry, file=sys.stderr)
-    else:
-        print(log_entry, file=sys.stdout)
-    return timestamp, level, message
+    
+    # Записываем сообщение в файл
+    log_file.write(log_entry + "\n")
+    log_file.flush()  # Обеспечиваем запись в файл сразу
 
 def excel_to_csv(excel_file, csv_file, log_message):
     """
@@ -24,111 +25,47 @@ def excel_to_csv(excel_file, csv_file, log_message):
 
     :param excel_file: Путь к Excel-файлу.
     :param csv_file: Путь для сохранения CSV-файла.
-    :param log_message: Функция логирования, переданная из journal_SO.pyw.
+    :param log_message: Функция логирования.
     """
     try:
         log_message(f"Начало преобразования файла {excel_file} в CSV...", "INFO")
+        
+        # Проверка, что Excel-файл существует
+        if not os.path.exists(excel_file):
+            log_message(f"Файл {excel_file} не найден.", "ERROR")
+            raise FileNotFoundError(f"Файл {excel_file} не найден.")
+
+        log_message(f"Чтение Excel-файла: {excel_file}", "DEBUG")
+        
+        # Чтение Excel-файла
         df = pd.read_excel(excel_file)
+        log_message(f"Excel-файл успешно прочитан. Количество строк: {len(df)}", "DEBUG")
+        
+        log_message(f"Сохранение в CSV: {csv_file}", "DEBUG")
+        
+        # Сохранение в CSV
         df.to_csv(csv_file, index=False, encoding='utf-8')
-        log_message(f"Файл успешно преобразован: {csv_file}", "OK")  # Уровень OK для успешного преобразования
+        
+        # Проверка, что CSV-файл создан
+        if os.path.exists(csv_file):
+            log_message(f"Файл успешно преобразован: {csv_file}", "OK")
+        else:
+            log_message(f"Файл {csv_file} не был создан.", "ERROR")
+            raise Exception(f"Файл {csv_file} не был создан.")
+
     except Exception as e:
         log_message(f"Ошибка при преобразовании файла: {e}", "ERROR")
         raise  # Пробрасываем исключение для обработки в вызывающем коде
 
-def check_and_convert_files(schedule_file, reference_file, log_message):
-    """
-    Проверяет типы файлов и преобразует Excel в CSV, если это необходимо.
+# Точка входа в программу
+if __name__ == "__main__":
+    # Получаем аргументы командной строки
+    if len(sys.argv) != 3:
+        log_message("Использование: python excel_to_csv.py <excel_file> <csv_file>", "ERROR")
+        sys.exit(1)
 
-    :param schedule_file: Путь к файлу расписания.
-    :param reference_file: Путь к файлу справочника.
-    :param log_message: Функция логирования из основного скрипта.
-    :return: Возвращает пути к файлам (оригинальные или преобразованные).
-    """
-    try:
-        # Логирование начала процесса проверки файлов
-        log_message("Начало проверки и преобразования файлов.", "INFO")
-        log_message(f"Полученные пути: schedule_file = {schedule_file}, reference_file = {reference_file}", "DEBUG")
+    excel_file = sys.argv[1]  # Путь к Excel-файлу
+    csv_file = sys.argv[2]    # Путь для сохранения CSV-файла
 
-        # Получаем текущую директорию, где находится скрипт
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        log_message(f"Текущая директория скрипта: {script_dir}", "DEBUG")
-
-        # Проверка существования файла расписания
-        log_message("Проверка существования файла расписания...", "DEBUG")
-        if not os.path.exists(schedule_file):
-            log_message(f"Файл расписания {schedule_file} не найден.", "ERROR")
-            raise FileNotFoundError(f"Файл расписания {schedule_file} не найден.")
-        log_message(f"Файл расписания {schedule_file} существует.", "DEBUG")
-
-        # Проверка и преобразование файла расписания
-        log_message("Проверка типа файла расписания...", "DEBUG")
-        if schedule_file.endswith('.xlsx'):
-            log_message(f"Обнаружен Excel-файл расписания: {schedule_file}. Начинаем преобразование в CSV.", "INFO")
-            
-            # Формируем путь для CSV-файла в той же директории, что и скрипт
-            schedule_filename = os.path.basename(schedule_file).replace('.xlsx', '.csv')
-            csv_schedule_file = os.path.join(script_dir, schedule_filename)
-            log_message(f"Сформирован путь для CSV-файла расписания: {csv_schedule_file}", "DEBUG")
-
-            # Проверка существования CSV-файла перед преобразованием
-            if os.path.exists(csv_schedule_file):
-                log_message(f"CSV-файл расписания {csv_schedule_file} уже существует. Удаление старого файла.", "INFO")
-                os.remove(csv_schedule_file)
-                log_message(f"Старый CSV-файл расписания {csv_schedule_file} удален.", "DEBUG")
-
-            # Преобразование Excel в CSV
-            log_message(f"Вызов функции excel_to_csv для файла расписания: {schedule_file}", "DEBUG")
-            excel_to_csv(schedule_file, csv_schedule_file, log_message)  # Передаем log_message
-            log_message(f"Excel-файл расписания успешно преобразован в CSV: {csv_schedule_file}", "OK")  # Уровень OK для успешного преобразования
-
-            # Обновление пути к файлу расписания
-            schedule_file = csv_schedule_file
-            log_message(f"Обновленный путь к файлу расписания: {schedule_file}", "DEBUG")
-        else:
-            log_message(f"Файл расписания {schedule_file} уже в формате CSV. Преобразование не требуется.", "INFO")
-
-        # Проверка существования файла справочника
-        log_message("Проверка существования файла справочника...", "DEBUG")
-        if not os.path.exists(reference_file):
-            log_message(f"Файл справочника {reference_file} не найден.", "ERROR")
-            raise FileNotFoundError(f"Файл справочника {reference_file} не найден.")
-        log_message(f"Файл справочника {reference_file} существует.", "DEBUG")
-
-        # Проверка и преобразование файла справочника
-        log_message("Проверка типа файла справочника...", "DEBUG")
-        if reference_file.endswith('.xlsx'):
-            log_message(f"Обнаружен Excel-файл справочника: {reference_file}. Начинаем преобразование в CSV.", "INFO")
-            
-            # Формируем путь для CSV-файла в той же директории, что и скрипт
-            reference_filename = os.path.basename(reference_file).replace('.xlsx', '.csv')
-            csv_reference_file = os.path.join(script_dir, reference_filename)
-            log_message(f"Сформирован путь для CSV-файла справочника: {csv_reference_file}", "DEBUG")
-
-            # Проверка существования CSV-файла перед преобразованием
-            if os.path.exists(csv_reference_file):
-                log_message(f"CSV-файл справочника {csv_reference_file} уже существует. Удаление старого файла.", "INFO")
-                os.remove(csv_reference_file)
-                log_message(f"Старый CSV-файл справочника {csv_reference_file} удален.", "DEBUG")
-
-            # Преобразование Excel в CSV
-            log_message(f"Вызов функции excel_to_csv для файла справочника: {reference_file}", "DEBUG")
-            excel_to_csv(reference_file, csv_reference_file, log_message)  # Передаем log_message
-            log_message(f"Excel-файл справочника успешно преобразован в CSV: {csv_reference_file}", "OK")  # Уровень OK для успешного преобразования
-
-            # Обновление пути к файлу справочника
-            reference_file = csv_reference_file
-            log_message(f"Обновленный путь к файлу справочника: {reference_file}", "DEBUG")
-        else:
-            log_message(f"Файл справочника {reference_file} уже в формате CSV. Преобразование не требуется.", "INFO")
-
-        # Логирование успешного завершения
-        log_message("Проверка и преобразование файлов завершены успешно.", "OK")  # Уровень OK для успешного завершения
-        log_message(f"Итоговые пути: schedule_file = {schedule_file}, reference_file = {reference_file}", "DEBUG")
-
-        return schedule_file, reference_file
-
-    except Exception as e:
-        # Логирование ошибки
-        log_message(f"Ошибка при проверке и преобразовании файлов: {e}", "ERROR")
-        log_message(f"Текущие пути: schedule_file = {schedule_file}, reference_file = {reference_file}", "DEBUG")
-        raise  # Пробрасываем исключение дальше для обработки в основном скрипте
+    # Вызов основной функции
+    excel_to_csv(excel_file, csv_file, log_message)

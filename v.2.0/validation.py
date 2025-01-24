@@ -3,14 +3,21 @@ import csv
 import sys
 from datetime import datetime
 
+# Настройка логирования в файл
+log_file = open("validation.log", "w", encoding="utf-8")
+
 def log_message(message, level):
     """
     Логирует сообщение с указанным уровнем и временем.
-    Эта функция будет передана из journal_SO.py.
+    :param message: Сообщение для логирования.
+    :param level: Уровень логирования (INFO, ERROR, DEBUG, OK и т.д.).
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Получаем текущее время
-    log_entry = f"[{timestamp}] [{level}] {message}"  # Добавляем время в лог
-    print(log_entry)  # Временный вывод в консоль для отладки
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{level}] {message}"
+    
+    # Записываем сообщение в файл
+    log_file.write(log_entry + "\n")
+    log_file.flush()  # Обеспечиваем запись в файл сразу
 
 def validate_guide_file(file_path, log_message):
     """
@@ -172,14 +179,11 @@ def main(schedule_file, reference_file, log_message):
         log_message(f"Ошибка при выполнении скрипта Validation.py: {e}", "ERROR")
         return False
 
+# Точка входа в программу
 if __name__ == "__main__":
-    # Пример вызова скрипта напрямую (для тестирования)
-    def log_message(message, level):
-        print(f"[{level}] {message}")
-
     # Получаем аргументы командной строки
     if len(sys.argv) != 3:
-        print("Использование: python Validation.py <schedule_file> <reference_file>")
+        log_message("Использование: python Validation.py <schedule_file> <reference_file>", "ERROR")
         sys.exit(1)
 
     schedule_file = sys.argv[1]
@@ -188,6 +192,6 @@ if __name__ == "__main__":
     # Вызов основной функции
     result = main(schedule_file, reference_file, log_message)
     if result:
-        print("Файлы валидны.")
+        log_message("Файлы валидны.", "OK")
     else:
-        print("Файлы не валидны.")
+        log_message("Файлы не валидны.", "ERROR")

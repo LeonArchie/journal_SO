@@ -9,7 +9,7 @@ import os
 all_log_messages = []
 
 # Открываем файл для записи логов (перезаписываем при каждом запуске)
-log_file = open("log.log", "w", encoding="utf-8")
+log_file = open("Journal_SO.log", "w", encoding="utf-8")
 
 def log_message(message, level):
     """Логирует сообщение с указанным уровнем и временем."""
@@ -23,9 +23,6 @@ def log_message(message, level):
     # Записываем сообщение в файл
     log_file.write(log_entry + "\n")
     log_file.flush()  # Обеспечиваем запись в файл сразу
-    
-    # Обновляем лог
-    update_log()
 
 def update_log():
     """Обновляет лог на основе выбранного уровня логирования."""
@@ -81,9 +78,9 @@ def select_schedule_file():
         filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv")]
     )
     if file_path:
+        log_message(f"Выбран файл расписания: {file_path}", "INFO")
         schedule_entry.delete(0, tk.END)
         schedule_entry.insert(0, file_path)
-        log_message(f"Выбран файл расписания: {file_path}", "INFO")
     else:
         log_message("Выбор файла расписания отменен.", "WARNING")
     check_fields()
@@ -95,9 +92,9 @@ def select_reference_file():
         filetypes=[("Excel files", "*.xlsx"), ("CSV files", "*.csv")]
     )
     if file_path:
+        log_message(f"Выбран файл справочника: {file_path}", "INFO")
         reference_entry.delete(0, tk.END)
         reference_entry.insert(0, file_path)
-        log_message(f"Выбран файл справочника: {file_path}", "INFO")
     else:
         log_message("Выбор файла справочника отменен.", "WARNING")
     check_fields()
@@ -106,11 +103,11 @@ def check_fields():
     """Проверяет, заполнены ли все обязательные поля."""
     log_message("Проверка заполнения полей.", "DEBUG")
     if avers_combobox.get() != "Выберите программу" and schedule_entry.get() and reference_entry.get():
-        start_button.config(state="normal")
         log_message("Все поля заполнены. Кнопка 'Старт' активирована.", "INFO")
+        start_button.config(state="normal")
     else:
-        start_button.config(state="disabled")
         log_message("Не все поля заполнены. Кнопка 'Старт' неактивна.", "WARNING")
+        start_button.config(state="disabled")
 
 def start_process():
     """Обработка нажатия кнопки 'Старт'."""
@@ -218,7 +215,7 @@ log_level_label = ttk.Label(root, text="Уровень логирования:")
 log_level_label.grid(row=0, column=3, padx=2, pady=1, sticky="w")
 
 log_level_combobox = ttk.Combobox(root, values=log_levels, state="readonly", width=10)
-log_level_combobox.current(log_levels.index("ERROR"))  # По умолчанию ERROR
+log_level_combobox.current(log_levels.index("DEBUG"))  # По умолчанию DEBUG для максимального логирования
 log_level_combobox.grid(row=0, column=3, padx=2, pady=1, sticky="e")
 log_level_combobox.bind("<<ComboboxSelected>>", lambda event: filter_logs())
 
