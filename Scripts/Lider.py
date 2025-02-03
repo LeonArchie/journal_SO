@@ -11,15 +11,16 @@ files_to_delete = [
     "raspisanie.csv",
     "raspisanie.json",
     "raspisanie_modified.json",
-    "error.log"
+    "error.log",
+    "group.csv"
 ]
 
 # Список скриптов для запуска
 scripts_to_run = [
     ".\\exel_to_csv.py",
     ".\\csv_to_json.py",
-    ".\\normalization.py",
     ".\\FindError.py",
+    ".\\normalization.py",
     ".\\json_to_GIS_SO.py"
 ]
 

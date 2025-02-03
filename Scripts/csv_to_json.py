@@ -142,13 +142,14 @@ def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=Fal
             logging.debug(f"Урок в {day} отсутствует. Пропускаем.")
             continue
         
-        # Добавляем урок в структуру
+        # Добавляем ключ groups с пустой строкой к каждому уроку
         logging.debug(f"Добавление урока с ключом {lesson_key} в {day}.")
         class_data[day][lesson_key] = {
             "time": lesson_time,
             "lesson": lesson_name,
             "teach": teacher_name,
-            "number": lesson_room
+            "number": lesson_room,
+            "groups": ""  # Добавляем ключ groups с пустой строкой
         }
 
 # Вызов функции

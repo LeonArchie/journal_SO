@@ -35,7 +35,7 @@ if __name__ == "__main__":
     logging.info("Скрипт начал выполнение.")
 
     # Список файлов для проверки
-    files = ['raspisanie.xlsx', 'klass.xlsx', 'lesson.xlsx']
+    files = ['raspisanie.xlsx', 'klass.xlsx', 'lesson.xlsx', 'groups.xlsx']
 
     # Проверяем наличие файлов
     if not check_files(files):
