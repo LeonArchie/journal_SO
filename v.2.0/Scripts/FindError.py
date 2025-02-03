@@ -1,131 +1,80 @@
-import json
 import csv
+import json
 import logging
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+    filename='log.log',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Функция для загрузки предметов из файла Spravosh.csv
-def load_subjects(file_path):
-    """
-    Загружает список допустимых предметов из файла Spravosh.csv.
-    Файл должен быть в кодировке cp1251 (Windows-1251).
-    Первые две строки файла игнорируются, так как они содержат заголовки.
-    Возвращает список предметов.
-    """
-    subjects = []  # Создаем пустой список для хранения предметов
-    logging.info(f"Загрузка предметов из файла: {file_path}")
-    
-    # Открываем файл Spravosh.csv для чтения
-    with open(file_path, 'r', encoding='cp1251') as file:
-        reader = csv.reader(file, delimiter=';')  # Используем разделитель ';'
-        
-        # Проходим по каждой строке файла
-        for i, row in enumerate(reader):
-            if i >= 2:  # Игнорируем первые две строки (заголовки)
-                subject = row[0].strip()  # Убираем лишние пробелы и добавляем предмет в список
-                subjects.append(subject)
-                logging.debug(f"Добавлен предмет: {subject}")
-    
-    logging.info(f"Загружено {len(subjects)} предметов.")
-    return subjects
+# Открываем файл klass.csv и считываем первые значения из каждой строки (пропуская первые 3 строки)
+klass = []
+try:
+    with open('klass.csv', 'r', encoding='windows-1251') as file:
+        reader = csv.reader(file, delimiter=';')
+        for i in range(3):  # Пропускаем первые 3 строки
+            next(reader, None)
+        for row in reader:
+            if row:  # Проверяем, что строка не пустая
+                klass.append(row[0].strip())
+    logging.info("Файл klass.csv успешно обработан.")
+except Exception as e:
+    logging.error(f"Ошибка при чтении файла klass.csv: {e}")
 
-# Функция для проверки расписания
-def check_schedule(schedule, subjects, error_file_path):
-    """
-    Проверяет расписание на наличие предметов, которые не указаны в списке допустимых.
-    Если найден недопустимый предмет, он заменяется на пустые значения, а информация об ошибке записывается в файл.
-    Возвращает True, если найдены ошибки, иначе False.
-    """
-    errors_found = False  # Флаг для отслеживания наличия ошибок
-    logging.info(f"Начало проверки расписания. Ошибки будут записаны в файл: {error_file_path}")
-    
-    # Открываем файл для записи ошибок
-    with open(error_file_path, 'w', encoding='utf-8') as error_file:
-        # Проходим по каждому классу в расписании
-        for class_name, days in schedule.items():
-            logging.info(f"Проверка класса: {class_name}")
-            
-            # Проходим по каждому дню недели
-            for day, lessons in days.items():
-                logging.info(f"Проверка дня: {day}")
-                
-                # Проходим по каждому уроку в дне
-                for lesson_num, lesson_data in lessons.items():
-                    lesson_subject = lesson_data["Урок"]  # Получаем название предмета
-                    
-                    # Проверяем, есть ли предмет в списке допустимых
-                    if lesson_subject not in subjects:
-                        # Если предмет не найден, заменяем все значения на пустоту
-                        schedule[class_name][day][lesson_num] = {
-                            "Время": "",
-                            "Урок": "",
-                            "Кабинет": "",
-                            "Учитель": ""
-                        }
-                        
-                        # Записываем ошибку в файл
-                        error_file.write(f"{{ОШИБКА}} Класс - {class_name} - {day} - Номер урока {lesson_num}\n")
-                        error_file.write(f"{json.dumps(lesson_data, ensure_ascii=False, indent=4)}\n\n")
-                        
-                        # Логируем ошибку в консоль и в файл app.log
-                        logging.error(f"Найдена ошибка в классе {class_name}, день {day}, урок {lesson_num}")
-                        logging.error(f"Недопустимый предмет: {lesson_subject}")
-                        errors_found = True
-                    else:
-                        # Если предмет корректен, логируем успешную проверку
-                        logging.debug(f"Урок {lesson_num} в классе {class_name}, день {day} корректен. Предмет: {lesson_subject}")
-    
-    # Логируем итог проверки
-    if errors_found:
-        logging.info("Проверка завершена. Найдены ошибки.")
-    else:
-        logging.info("Проверка завершена. Ошибок не найдено.")
-    
-    return errors_found
+# Открываем файл lesson.csv и считываем все строки (пропуская первые 2 строки)
+lesson = []
+try:
+    with open('lesson.csv', 'r', encoding='windows-1251') as file:
+        reader = csv.reader(file, delimiter=';')
+        for i in range(2):  # Пропускаем первые 2 строки
+            next(reader, None)
+        for row in reader:
+            if row:  # Проверяем, что строка не пустая
+                lesson.append(row[0].strip())
+    logging.info("Файл lesson.csv успешно обработан.")
+except Exception as e:
+    logging.error(f"Ошибка при чтении файла lesson.csv: {e}")
 
-# Пути к файлам
-spravosh_file_path = '/home/archie/EDU/Spravosh.csv'  # Путь к файлу с предметами
-schedule_file_path = '/home/archie/EDU/schedule.json'  # Путь к файлу с расписанием
-error_file_path = '/home/archie/EDU/error.txt'  # Путь к файлу для записи ошибок
+# Считываем файл raspisanie_modified.json
+try:
+    with open('raspisanie_modified.json', 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    logging.info("Файл raspisanie_modified.json успешно загружен.")
+except Exception as e:
+    logging.error(f"Ошибка при чтении файла raspisanie_modified.json: {e}")
+    exit()
 
-# Основной блок выполнения скрипта
-logging.info("Начало работы скрипта.")
+# Проверяем значения в JSON файле
+errors = []
 
-# Загружаем предметы из Spravosh.csv
-logging.info(f"Загрузка предметов из файла: {spravosh_file_path}")
-subjects = load_subjects(spravosh_file_path)
+for class_name, days in data.items():
+    for day, lessons in days.items():
+        for lesson_num, lesson_info in lessons.items():
+            # Проверяем ключ "lesson"
+            lesson_value = lesson_info.get("lesson", "").strip()
+            if lesson_value and lesson_value not in lesson:  # Проверяем только если значение не пустое
+                errors.append(f"Класс: {class_name}, День: {day}, Урок: {lesson_num}, "
+                              f"Несоответствие в lesson: {lesson_value}")
 
-# Загружаем JSON с расписанием
-logging.info(f"Загрузка расписания из файла: {schedule_file_path}")
-with open(schedule_file_path, 'r', encoding='utf-8') as file:
-    schedule = json.load(file)
-logging.info("Расписание успешно загружено.")
+            # Проверяем ключ "number"
+            number_value = lesson_info.get("number", "").strip()
+            if number_value and number_value not in klass:  # Проверяем только если значение не пустое
+                errors.append(f"Класс: {class_name}, День: {day}, Урок: {lesson_num}, "
+                              f"Несоответствие в number: {number_value}")
 
-# Проверяем расписание
-logging.info("Начало проверки расписания.")
-errors_found = check_schedule(schedule, subjects, error_file_path)
-
-# Сохраняем обновленный JSON (если были ошибки)
-if errors_found:
-    logging.info(f"Сохранение обновленного расписания в файл: {schedule_file_path}")
-    with open(schedule_file_path, 'w', encoding='utf-8') as file:
-        json.dump(schedule, file, ensure_ascii=False, indent=4)
-    logging.info("Обновленное расписание сохранено.")
+# Записываем ошибки в файл error.log
+if errors:
+    try:
+        with open('error.log', 'w', encoding='utf-8') as file:
+            for error in errors:
+                file.write(error + '\n')
+                logging.error(error)
+        logging.info("Несоответствия записаны в файл error.log.")
+    except Exception as e:
+        logging.error(f"Ошибка при записи в файл error.log: {e}")
 else:
-    logging.info("Расписание не требует изменений.")
+    logging.info("Несоответствий не найдено.")
 
-# Выводим итоговый отчет
-if errors_found:
-    logging.info("ПРОВЕРЕНО - НАЙДЕНЫ ОШИБКИ")
-else:
-    logging.info("ПРОВЕРЕНО - Ошибок не найдено")
-
-logging.info("Работа скрипта завершена.")
+print("Скрипт завершил работу.")
