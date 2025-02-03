@@ -110,7 +110,7 @@ def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=Fal
     # Извлекаем номер урока (для основного урока)
     lesson_number = par_lesson[0].strip()
     
-    # Если это дополнительный урок, добавляем суффикс .1
+    # Если это дополнительный урок, добавляем суффикс .1 к номеру основного урока
     lesson_key = f"{lesson_number}.1" if is_additional else lesson_number
     
     # Извлекаем время урока (оно одинаковое для основного и дополнительного)
