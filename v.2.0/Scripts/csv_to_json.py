@@ -24,6 +24,7 @@ def convert_csv_to_json(input_file, output_file):
     result = {}  # Результирующий словарь для хранения данных
     current_class = None  # Текущий класс, который обрабатывается
     days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]  # Дни недели
+    previous_lesson_number = None  # Переменная для отслеживания последнего основного номера урока
     
     try:
         with open(input_file, 'r', encoding='windows-1251') as csvfile:
@@ -54,10 +55,8 @@ def convert_csv_to_json(input_file, output_file):
                     result[class_name] = {day: {} for day in days}  # Создаем структуру для класса
                     current_class = class_name
                     logging.info(f"Начата обработка класса: {current_class}.")
-                    i += 1
-                    i += 1
-                    i += 1
-                    i += 1
+                    previous_lesson_number = None  # Сбрасываем предыдущий номер урока
+                    i += 4  # Пропускаем заголовочные строки
                     continue
                 
                 # Обработка пар строк (урок и учитель)
@@ -69,12 +68,13 @@ def convert_csv_to_json(input_file, output_file):
                     # Проверка на дополнительный урок
                     if par_lesson and not par_lesson[0].strip():
                         logging.debug("Обнаружен дополнительный урок.")
-                        process_lesson(par_lesson, teach_lesson, result[current_class], days, is_additional=True)
+                        process_lesson(par_lesson, teach_lesson, result[current_class], days, is_additional=True, previous_lesson_number=previous_lesson_number)
                         i += 2
                     else:
                         # Основной урок
                         logging.debug("Обработка основного урока.")
                         process_lesson(par_lesson, teach_lesson, result[current_class], days)
+                        previous_lesson_number = par_lesson[0].strip() if par_lesson[0].strip() else previous_lesson_number
                         i += 2
                 
                 # Проверка на пустую строку (конец расписания для текущего класса)
@@ -82,7 +82,7 @@ def convert_csv_to_json(input_file, output_file):
                     logging.debug(f"Пустая строка {i + 1}. Ожидание нового класса.")
                     current_class = None
                     i += 1
-    
+        
         # Запись результата в JSON файл
         logging.info(f"Запись результата в файл {output_file}.")
         with open(output_file, 'w', encoding='utf-8') as jsonfile:
@@ -94,7 +94,7 @@ def convert_csv_to_json(input_file, output_file):
         logging.error(f"Ошибка при обработке файла {input_file}: {str(e)}")
         print(f"Ошибка: {str(e)}")
 
-def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=False):
+def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=False, previous_lesson_number=None):
     """
     Обрабатывает урок и добавляет его в структуру класса.
     :param par_lesson: Строка с данными урока.
@@ -102,22 +102,36 @@ def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=Fal
     :param class_data: Структура данных класса.
     :param days: Список дней недели.
     :param is_additional: Флаг, указывающий, является ли урок дополнительным.
+    :param previous_lesson_number: Номер предыдущего основного урока.
     """
     if not par_lesson or not teach_lesson:
-        logging.debug("Пустые данные урока. Пропускаем.")
+        logging.warning("Пустые данные урока. Пропускаем.")
         return
     
     # Извлекаем номер урока (для основного урока)
-    lesson_number = par_lesson[0].strip()
+    lesson_number = par_lesson[0].strip() if par_lesson[0] else ""
+    logging.debug(f"Номер урока: {lesson_number}.")
     
-    # Если это дополнительный урок, добавляем суффикс .1 к номеру основного урока
-    lesson_key = f"{lesson_number}.1" if is_additional else lesson_number
+    # Если это дополнительный урок, используем previous_lesson_number
+    if is_additional and previous_lesson_number:
+        lesson_key = f"{previous_lesson_number}.1"
+    elif is_additional:
+        logging.error("Недостаточно данных для формирования ключа дополнительного урока.")
+        return
+    else:
+        lesson_key = lesson_number
     
     # Извлекаем время урока (оно одинаковое для основного и дополнительного)
-    lesson_time = par_lesson[1].strip()
+    lesson_time = par_lesson[1].strip() if len(par_lesson) > 1 else ""
+    logging.debug(f"Время урока: {lesson_time}.")
     
     # Обрабатываем каждый день недели
     for day_idx, day in enumerate(days):
+        # Проверяем длину строк для избежания ошибок индексации
+        if len(par_lesson) < (2 + 2 * day_idx + 1) or len(teach_lesson) < (2 + 2 * day_idx + 1):
+            logging.warning(f"Недостаточно данных для дня {day}. Пропускаем.")
+            continue
+        
         # Извлекаем данные урока для текущего дня
         lesson_name = par_lesson[2 + 2 * day_idx].strip()  # Название урока
         lesson_room = par_lesson[3 + 2 * day_idx].strip()  # Кабинет

@@ -125,5 +125,3 @@ try:
 except Exception as e:
     logging.error(f"Ошибка при записи файла: {e}")
     raise SystemExit(f"Ошибка при записи файла: {e}")
-
-print(f"Файл успешно обработан и сохранен как {output_file_path}")

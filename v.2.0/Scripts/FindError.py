@@ -76,5 +76,3 @@ if errors:
         logging.error(f"Ошибка при записи в файл error.log: {e}")
 else:
     logging.info("Несоответствий не найдено.")
-
-print("Скрипт завершил работу.")
