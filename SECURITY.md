@@ -10,6 +10,4 @@
 
 ## Сообщение об уязвимости
 
-Use this section to tell people how to report a vulnerability.
-
 Не Выявлено
