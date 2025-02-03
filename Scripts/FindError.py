@@ -37,13 +37,13 @@ try:
 except Exception as e:
     logging.error(f"Ошибка при чтении файла lesson.csv: {e}")
 
-# Считываем файл raspisanie_modified.json
+# Считываем файл raspisanie.json
 try:
-    with open('raspisanie_modified.json', 'r', encoding='utf-8') as file:
+    with open('raspisanie.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
-    logging.info("Файл raspisanie_modified.json успешно загружен.")
+    logging.info("Файл raspisanie.json успешно загружен.")
 except Exception as e:
-    logging.error(f"Ошибка при чтении файла raspisanie_modified.json: {e}")
+    logging.error(f"Ошибка при чтении файла raspisanie.json: {e}")
     exit()
 
 # Проверяем значения в JSON файле
