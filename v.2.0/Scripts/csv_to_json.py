@@ -11,6 +11,9 @@ logging.basicConfig(
 )
 
 def convert_csv_to_json(input_file, output_file):
+    """
+    Основная функция для конвертации CSV файла с расписанием в JSON.
+    """
     if not os.path.exists(input_file):
         logging.error(f"Файл {input_file} не найден.")
         print(f"Ошибка: Файл {input_file} не найден.")
@@ -18,93 +21,70 @@ def convert_csv_to_json(input_file, output_file):
     
     logging.info(f"Начало обработки файла {input_file}.")
     
-    result = {}
-    current_class = None
-    days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]
-    started_processing = False  # Флаг для начала обработки
-    last_lesson_number = {}  # Словарь для хранения последних номеров уроков для каждого дня
+    result = {}  # Результирующий словарь для хранения данных
+    current_class = None  # Текущий класс, который обрабатывается
+    days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"]  # Дни недели
     
     try:
         with open(input_file, 'r', encoding='windows-1251') as csvfile:
             reader = csv.reader(csvfile, delimiter=';')
+            rows = list(reader)  # Читаем все строки
+            logging.info(f"Файл {input_file} успешно прочитан. Всего строк: {len(rows)}.")
             
-            for row in reader:
-                logging.debug(f"Обработка строки: {row}")
+            i = 0
+            # Игнорируем все строки до первого вхождения "Класс - "
+            while i < len(rows):
+                row = rows[i]
+                logging.debug(f"Обработка строки {i + 1}: {row}")
                 
-                # Пропускаем строки до первой строки "Класс -"
-                if not started_processing:
-                    if row and row[0].startswith("Класс - "):
-                        started_processing = True  # Начинаем обработку
+                if row and row[0].startswith("Класс - "):
+                    logging.debug(f"Найдено начало расписания для класса: {row[0]}.")
+                    break
+                i += 1
+            
+            # Основной цикл обработки расписания
+            while i < len(rows):
+                row = rows[i]
+                logging.debug(f"Обработка строки {i + 1}: {row}")
+                
+                # Обработка строки с названием класса
+                if row and row[0].startswith("Класс - "):
+                    # Удаляем подстроку "Класс - " и ";;;;;;;;;;"
+                    class_name = row[0].replace("Класс - ", "").replace(";;;;;;;;;;", "").strip()
+                    result[class_name] = {day: {} for day in days}  # Создаем структуру для класса
+                    current_class = class_name
+                    logging.info(f"Начата обработка класса: {current_class}.")
+                    i += 1
+                    i += 1
+                    i += 1
+                    i += 1
+                    continue
+                
+                # Обработка пар строк (урок и учитель)
+                if i + 1 < len(rows):
+                    par_lesson = rows[i]  # Строка с уроком
+                    teach_lesson = rows[i + 1]  # Строка с учителем
+                    logging.debug(f"Обработка пары строк: урок = {par_lesson}, учитель = {teach_lesson}.")
+                    
+                    # Проверка на дополнительный урок
+                    if par_lesson and not par_lesson[0].strip():
+                        logging.debug("Обнаружен дополнительный урок.")
+                        process_lesson(par_lesson, teach_lesson, result[current_class], days, is_additional=True)
+                        i += 2
                     else:
-                        continue
+                        # Основной урок
+                        logging.debug("Обработка основного урока.")
+                        process_lesson(par_lesson, teach_lesson, result[current_class], days)
+                        i += 2
                 
-                if not row or all(not cell.strip() for cell in row):  # Пропускаем пустые строки
-                    continue
-                
-                # Ищем строку с названием класса
-                if row[0].startswith("Класс - "):
-                    current_class = row[0].replace("Класс - ", "").replace(";;;;;;;;;;", "")
-                    result[current_class] = {day: {} for day in days}
-                    logging.info(f"Обработка класса: {current_class}")
-                    last_lesson_number = {day: None for day in days}  # Сбрасываем счетчик уроков
-                    continue
-                
-                # Пропускаем строки начинающиеся с '#'
-                if row[0].startswith("#") or (row[0] and row[0].strip() == ""):
-                    continue
-                
-                # Обработка строки с временем и уроками
-                if len(row) >= 12 and row[0].isdigit():
-                    lesson_number = row[0]
-                    times = row[1]
-                    
-                    for i, day in enumerate(days):
-                        lesson_info = {
-                            "time": times,
-                            "lesson": row[2 + 2 * i].strip(),
-                            "teach": "",
-                            "number": row[3 + 2 * i].strip()
-                        }
-                        
-                        # Если уже есть запись с таким номером урока, добавляем ".1"
-                        if lesson_number in result[current_class][day]:
-                            lesson_number += ".1"
-                        
-                        result[current_class][day][lesson_number] = lesson_info
-                        last_lesson_number[day] = lesson_number  # Сохраняем последний номер урока
-                    
-                    continue
-                
-                # Обработка строки с преподавателями
-                if len(row) >= 12 and not row[0].isdigit():
-                    for i, day in enumerate(days):
-                        teacher = row[2 + 2 * i].strip()
-                        if teacher and last_lesson_number[day]:  # Проверяем, что учитель указан и есть номер урока
-                            result[current_class][day][last_lesson_number[day]]["teach"] = teacher
-                    
-                    continue
-                
-                # Обработка строк, начинающихся с ';;' (добавление '.1')
-                if row[0].startswith(";;"):
-                    for i, day in enumerate(days):
-                        if last_lesson_number[day]:
-                            new_lesson_number = f"{last_lesson_number[day].split('.')[0]}.1"
-                            if new_lesson_number in result[current_class][day]:
-                                new_lesson_number += ".1"
-                            
-                            # Копируем данные из предыдущего урока
-                            previous_lesson = result[current_class][day][last_lesson_number[day]]
-                            result[current_class][day][new_lesson_number] = {
-                                "time": previous_lesson["time"],
-                                "lesson": row[2 + 2 * i].strip(),
-                                "teach": "",
-                                "number": row[3 + 2 * i].strip()
-                            }
-                            last_lesson_number[day] = new_lesson_number  # Обновляем последний номер урока
-                    
-                    continue
-        
-        # Записываем результат в JSON файл
+                # Проверка на пустую строку (конец расписания для текущего класса)
+                if i < len(rows) and (not rows[i] or all(not cell.strip() for cell in rows[i])):
+                    logging.debug(f"Пустая строка {i + 1}. Ожидание нового класса.")
+                    current_class = None
+                    i += 1
+    
+        # Запись результата в JSON файл
+        logging.info(f"Запись результата в файл {output_file}.")
         with open(output_file, 'w', encoding='utf-8') as jsonfile:
             json.dump(result, jsonfile, ensure_ascii=False, indent=4)
         
@@ -113,6 +93,49 @@ def convert_csv_to_json(input_file, output_file):
     except Exception as e:
         logging.error(f"Ошибка при обработке файла {input_file}: {str(e)}")
         print(f"Ошибка: {str(e)}")
+
+def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=False):
+    """
+    Обрабатывает урок и добавляет его в структуру класса.
+    :param par_lesson: Строка с данными урока.
+    :param teach_lesson: Строка с данными учителя.
+    :param class_data: Структура данных класса.
+    :param days: Список дней недели.
+    :param is_additional: Флаг, указывающий, является ли урок дополнительным.
+    """
+    if not par_lesson or not teach_lesson:
+        logging.debug("Пустые данные урока. Пропускаем.")
+        return
+    
+    # Извлекаем номер урока (для основного урока)
+    lesson_number = par_lesson[0].strip()
+    
+    # Если это дополнительный урок, добавляем суффикс .1
+    lesson_key = f"{lesson_number}.1" if is_additional else lesson_number
+    
+    # Извлекаем время урока (оно одинаковое для основного и дополнительного)
+    lesson_time = par_lesson[1].strip()
+    
+    # Обрабатываем каждый день недели
+    for day_idx, day in enumerate(days):
+        # Извлекаем данные урока для текущего дня
+        lesson_name = par_lesson[2 + 2 * day_idx].strip()  # Название урока
+        lesson_room = par_lesson[3 + 2 * day_idx].strip()  # Кабинет
+        teacher_name = teach_lesson[2 + 2 * day_idx].strip()  # Учитель
+        
+        # Пропускаем пустые уроки
+        if not lesson_name:
+            logging.debug(f"Урок в {day} отсутствует. Пропускаем.")
+            continue
+        
+        # Добавляем урок в структуру
+        logging.debug(f"Добавление урока с ключом {lesson_key} в {day}.")
+        class_data[day][lesson_key] = {
+            "time": lesson_time,
+            "lesson": lesson_name,
+            "teach": teacher_name,
+            "number": lesson_room
+        }
 
 # Вызов функции
 if __name__ == "__main__":
