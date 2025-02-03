@@ -10,7 +10,8 @@ files_to_delete = [
     "log.log",
     "raspisanie.csv",
     "raspisanie.json",
-    "raspisanie_modified.json"
+    "raspisanie_modified.json",
+    "error.log"
 ]
 
 # Список скриптов для запуска
@@ -69,6 +70,7 @@ if __name__ == "__main__":
                         print("\nСодержимое файла log.log:")
                         print(log_file.read())
                 break
+            print(f"Скрипт {script} выполнен. Ожидание 3 секунды перед запуском следующего скрипта...")
             # Проверка наличия error.log после FindError.py
             if os.path.exists("error.log"):
                 print("Найден файл error.log. Выполнение прекращено.")
