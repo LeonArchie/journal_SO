@@ -5,36 +5,45 @@ import logging
 # Настройка логирования
 logging.basicConfig(
     filename='log.log',
-    level=logging.INFO,
+    level=logging.DEBUG,  # Уровень DEBUG для подробного логирования
     format='%(asctime)s - %(levelname)s - %(message)s',
-    encoding='utf-8'
 )
 
 def create_csv_schedule(json_file_path, output_csv_path):
     """
-    Преобразует JSON-файл с расписанием в CSV-файл.
+    Преобразует JSON-файл с расписанинием в CSV-файл.
+    Если есть группа, она добавляется в скобках после названия предмета.
     """
     logging.info("Начало работы функции create_csv_schedule.")
+    logging.debug(f"JSON-файл: {json_file_path}, CSV-файл: {output_csv_path}")
     
     try:
         # Загружаем JSON-файл с расписанием
+        logging.debug(f"Попытка загрузить JSON-файл: {json_file_path}")
         with open(json_file_path, 'r', encoding='utf-8') as file:
             schedule = json.load(file)
         logging.info(f"JSON-файл успешно загружен: {json_file_path}.")
+        logging.debug(f"Содержимое JSON: {schedule}")
     except FileNotFoundError:
         logging.error(f"Файл {json_file_path} не найден.")
         return
-    except json.JSONDecodeError:
-        logging.error(f"Ошибка декодирования JSON в файле {json_file_path}.")
+    except json.JSONDecodeError as e:
+        logging.error(f"Ошибка декодирования JSON в файле {json_file_path}: {e}")
         return
-
+    except Exception as e:
+        logging.error(f"Неизвестная ошибка при загрузке JSON: {e}")
+        return
+    
     # Создаем CSV-файл
     try:
+        logging.debug(f"Попытка создать CSV-файл: {output_csv_path}")
         with open(output_csv_path, 'w', encoding='windows-1251', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=';')
             
+            # Проходим по каждому классу в расписании
             for class_name, days in schedule.items():
                 logging.info(f"Обработка класса: {class_name}")
+                logging.debug(f"Дни недели для класса {class_name}: {days.keys()}")
                 
                 # Записываем заголовок класса
                 writer.writerow([f"Класс: {class_name}"])
@@ -48,7 +57,7 @@ def create_csv_schedule(json_file_path, output_csv_path):
                 all_lessons = set()
                 for day in days.values():
                     all_lessons.update(day.keys())
-                all_lessons_sorted = sorted(all_lessons, key=lambda x: float(x.split('.')[0]) + (0.1 if '.' in x else 0))
+                all_lessons_sorted = sorted(all_lessons, key=lambda x: float(x.split('.')[0]))
                 logging.debug(f"Все уроки для класса {class_name}: {all_lessons_sorted}")
                 
                 # Проходим по каждому уроку
@@ -64,27 +73,29 @@ def create_csv_schedule(json_file_path, output_csv_path):
                         
                         # Если урок существует в текущем дне, добавляем его данные
                         lesson_data = lessons.get(lesson_key, {})
+                        logging.debug(f"Данные урока {lesson_key} в день {day_name}: {lesson_data}")
                         
                         # Инициализируем ячейку как пустую строку
                         cell_content = ""
                         
                         if all(key in lesson_data for key in ['lesson', 'teach', 'time']):
+                            # Формируем название предмета с группой (если группа есть)
+                            lesson_name = lesson_data['lesson']
+                            if lesson_data.get('groups'):
+                                lesson_name += f" ({lesson_data['groups']})"
+                            
                             # Собираем основные данные
-                            cell_content = f"{lesson_data['lesson']}\n{lesson_data['teach']}\n{lesson_data['time']}"
+                            cell_content = f"{lesson_name}\n{lesson_data['teach']}\n{lesson_data['time']}"
                             
                             # Добавляем номер кабинета, если он есть
                             if lesson_data.get('number'):
                                 cell_content += f"\n{lesson_data['number']}"
-                            
-                            # Добавляем группы, если они указаны
-                            if lesson_data.get('groups'):
-                                cell_content += f"\n{lesson_data['groups']}"
                         
                         # Убираем лишний перенос строки в конце
-                        cell_content = cell_content.rstrip('\n')
+                        cell_content = cell_content.rstrip('\n') if cell_content else ""
                         
                         # Если ячейка пустая, оставляем ее такой
-                        row.append(cell_content if cell_content else "")
+                        row.append(cell_content)
                         
                         logging.debug(f"Данные урока {lesson_key} в день {day_name} добавлены в строку.")
                     
@@ -101,9 +112,9 @@ def create_csv_schedule(json_file_path, output_csv_path):
     except Exception as e:
         logging.error(f"Ошибка при создании CSV-файла: {e}")
 
+
 # Путь к JSON-файлу
 json_file_path = 'raspisanie_modified.json'
-
 # Путь для сохранения CSV-файла
 output_csv_path = 'GIS_schedule.csv'
 
