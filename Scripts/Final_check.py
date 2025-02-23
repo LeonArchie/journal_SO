@@ -40,18 +40,17 @@ try:
 except Exception as e:
     logging.error(f"Ошибка при чтении файла lesson.csv: {e}")
 
-# Считываем файл raspisanie.json
+# Считываем файл raspisanie_replace_lessons.json
 try:
-    with open('raspisanie.json', 'r', encoding='utf-8') as file:
+    with open('raspisanie_replace_lessons.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
-    logging.info("Файл raspisanie.json успешно загружен.")
+    logging.info("Файл raspisanie_replace_lessons.json успешно загружен.")
 except Exception as e:
-    logging.error(f"Ошибка при чтении файла raspisanie.json: {e}")
+    logging.error(f"Ошибка при чтении файла raspisanie_replace_lessons.json: {e}")
     exit()
 
 # Проверяем значения в JSON файле
 errors = []
-
 for class_name, days in data.items():
     for day, lessons in days.items():
         for lesson_num, lesson_info in lessons.items():
@@ -60,23 +59,22 @@ for class_name, days in data.items():
             if lesson_value and lesson_value not in lesson:  # Проверяем только если значение не пустое
                 errors.append(f"Класс: {class_name}, День: {day}, Урок: {lesson_num}, "
                               f"Несоответствие в lesson: {lesson_value}")
-
             # Проверяем ключ "number"
             number_value = lesson_info.get("number", "").strip()
-            if number_value and number_value not in klass:  # Проверяем только если значение не пустое
+            if number_value and number_value != "Нет кабинета" and number_value not in klass:  # Игнорируем "Нет кабинета"
                 errors.append(f"Класс: {class_name}, День: {day}, Урок: {lesson_num}, "
                               f"Несоответствие в number: {number_value}")
 
-# Записываем ошибки в файл error.log
+# Записываем ошибки в файл final_error.log
 if errors:
     try:
-        with open('error.log', 'w', encoding='utf-8') as file:
+        with open('final_error.log', 'w', encoding='utf-8') as file:
             for error in errors:
                 file.write(error + '\n')
                 logging.error(error)
-        logging.info("Несоответствия записаны в файл error.log.")
+        logging.info("Несоответствия записаны в файл final_error.log.")
     except Exception as e:
-        logging.error(f"Ошибка при записи в файл error.log: {e}")
+        logging.error(f"Ошибка при записи в файл final_error.log: {e}")
 else:
     logging.info("Несоответствий не найдено.")
 
