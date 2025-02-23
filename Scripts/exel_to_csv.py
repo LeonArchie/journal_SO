@@ -1,6 +1,7 @@
 import os
 import logging
 import pandas as pd
+import time
 
 # Настройка логирования
 logging.basicConfig(
@@ -32,10 +33,11 @@ def convert_excel_to_csv(file_name):
 
 # Основной скрипт
 if __name__ == "__main__":
+    time.sleep(2)
     logging.info("Скрипт начал выполнение.")
 
     # Список файлов для проверки
-    files = ['raspisanie.xlsx', 'klass.xlsx', 'lesson.xlsx', 'groups.xlsx']
+    files = ['raspisanie.xlsx', 'klass.xlsx', 'lesson.xlsx', 'groups.xlsx', 'zamena.xlsx']
 
     # Проверяем наличие файлов
     if not check_files(files):
@@ -45,5 +47,5 @@ if __name__ == "__main__":
     # Преобразуем каждый файл Excel в CSV
     for file in files:
         convert_excel_to_csv(file)
-
+        time.sleep(2)
     logging.info("Скрипт успешно завершил выполнение.")

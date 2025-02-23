@@ -114,7 +114,7 @@ def create_csv_schedule(json_file_path, output_csv_path):
 
 
 # Путь к JSON-файлу
-json_file_path = 'raspisanie_modified.json'
+json_file_path = 'raspisanie_replace_lessons.json'
 # Путь для сохранения CSV-файла
 output_csv_path = 'GIS_schedule.csv'
 
