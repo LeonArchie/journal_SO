@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 import os
+import time
 
 # Настройка логирования
 logging.basicConfig(
@@ -154,6 +155,11 @@ def process_lesson(par_lesson, teach_lesson, class_data, days, is_additional=Fal
 
 # Вызов функции
 if __name__ == "__main__":
+        # Пауза перед стартом
+    time.sleep(2)
+
     input_filename = 'raspisanie.csv'
     output_filename = 'raspisanie.json'
     convert_csv_to_json(input_filename, output_filename)
+
+    time.sleep(2)
