@@ -117,3 +117,4 @@ enforcement ladder](https://github.com/mozilla/diversity).
 Ответы на общие вопросы о данном кодексе поведения ищите на странице FAQ:
 https://www.contributor-covenant.org/faq. Переводы доступны по адресу
 https://www.contributor-covenant.org/translations.
+
