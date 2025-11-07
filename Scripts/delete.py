@@ -15,13 +15,16 @@ files_to_delete = [
     "groups.csv",
     "zamena.csv",
     "raspisanie.json",
+    "raspisanie_modified.json",
     "raspisanie_key_added.json",
     "raspisanie_sinh_time.json",
     "raspisanie_groups_added.json",
     "raspisanie_null_lesson_added.json",
     "raspisanie_sorted_schedule.json",
     "raspisanie_replace_lessons.json",
-    "raspisanie_cab_updated.json"
+    "raspisanie_cab_updated.json",
+    "GIS.xlsx",
+    "GIS_to_EXEL.txt"
 ]
 
 def delete_files(file_list):

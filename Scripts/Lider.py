@@ -18,6 +18,7 @@ scripts_to_run = [
     ".\\update_lesson_gis.py",
     ".\\Final_check.py",
     ".\\json_to_GIS_SO.py"
+    ".\\GIS_to_exel.py"
 ]
 
 # Функция для запуска скрипта и проверки его выполнения
@@ -69,23 +70,11 @@ if __name__ == "__main__":
             break
 
         # Пауза после выполнения скрипта
-        print(f"Скрипт {script} выполнен. Ожидание 5 секунд перед следующими проверками...")
-        time.sleep(5)
-
-        # Пауза перед проверкой специальных файлов
-        print("Проверка специальных файлов через 3 секунды...")
+        print(f"Скрипт {script} выполнен. Ожидание 3 секунд перед следующими проверками...")
         time.sleep(3)
 
-        # Проверка файла log.log на наличие слова ERROR
-        log_content = read_file("log.log")
-        if log_content and "ERROR" in log_content:
-            print("\nВ файле log.log найдены ошибки")
-            if not ask_user_confirmation("Продолжить выполнение? (да/нет): "):
-                print("Выполнение скрипта завершено по запросу пользователя.")
-                break
-
-        # Проверка наличия error.log или err_groups.log
-        error_files = ["error.log", "err_groups.log", "chech_groups.log", "final_error.log"]
+        # Проверка наличия файлов ошибок
+        error_files = ["err_groups.log", "chech_groups.log", "final_error.log"]
         files_found = [file for file in error_files if os.path.exists(file)]
         if files_found:
             print(f"Найдены следующие файлы ошибок: {', '.join(files_found)}.")
